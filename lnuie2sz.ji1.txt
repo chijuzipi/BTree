@@ -1,0 +1,31 @@
+﻿
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch master
+# Changes to be committed:
+#   (use "git reset HEAD <file>..." to unstage)
+#
+#	deleted:    block.o
+#	deleted:    btree.o
+#	deleted:    btree_delete.o
+#	deleted:    btree_display.o
+#	deleted:    btree_ds.o
+#	deleted:    btree_init.o
+#	deleted:    btree_insert.o
+#	deleted:    btree_lookup.o
+#	deleted:    btree_sane.o
+#	deleted:    btree_show.o
+#	deleted:    btree_update.o
+#	deleted:    buffercache.o
+#	deleted:    deletedisk.o
+#	deleted:    disksystem.o
+#	deleted:    freebuffer.o
+#	deleted:    infodisk.o
+#	deleted:    makedisk.o
+#	deleted:    readbuffer.o
+#	deleted:    readdisk.o
+#	deleted:    sim.o
+#	deleted:    writebuffer.o
+#	deleted:    writedisk.o
+#
+
