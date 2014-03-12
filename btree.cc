@@ -239,7 +239,7 @@ ERROR_T BTreeIndex::LookupOrUpdateInternal(const SIZE_T &node,
 	  return b.GetVal(offset,value);
 	} else { 
 	  // BTREE_OP_UPDATE
-	  // WRITE ME
+	  b.SetVal(offset,value);
 	  return ERROR_UNIMPL;
 	}
       }
@@ -464,7 +464,7 @@ ERROR_T BTreeIndex::SanityCheck() const
 
 ostream & BTreeIndex::Print(ostream &os) const
 {
-  // WRITE ME
+  Display(os, BTREE_DEPTH_DOT);
   return os;
 }
 
