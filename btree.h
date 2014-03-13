@@ -108,7 +108,7 @@ public:
   // return ERROR_CONFLICT if the key already exists and it's a unique index
   ERROR_T Insert(const KEY_T &key, const VALUE_T &value);
   ERROR_T LookupInsertion(list<SIZE_T> &clues, const SIZE_T &node, const KEY_T &key)
-  ERROR_T InsertRoot(BTreeNode &b, KEY_T &element, const VALUE_T &value, bool &pop, SIZE_T &ptr)
+  ERROR_T InsertNode(BTreeNode &b, KEY_T &element, const VALUE_T &value, bool &pop, SIZE_T &ptr)
   
   // return zero on success
   // return ERROR_NONEXISTENT  if the key doesn't exist
