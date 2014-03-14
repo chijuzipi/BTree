@@ -113,7 +113,7 @@ public:
   // return zero on success
   // return ERROR_NONEXISTENT  if the key doesn't exist
   // return ERROR_SIZE if the key or value are the wrong size for this index
-  ERROR_T Update(const KEY_T &key, VALUE_T &value);
+  ERROR_T Update(KEY_T key, VALUE_T value);
   
   // return zero on success
   // return ERROR_NONEXISTENT  if the key doesn't exist

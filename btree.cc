@@ -672,12 +672,12 @@ ERROR_T BTreeIndex::InsertNode(BTreeNode &b, KEY_T &key, const VALUE_T &value, b
 }
 
   
-ERROR_T BTreeIndex::Update(const KEY_T &key, VALUE_T &value)
+ERROR_T BTreeIndex::Update(KEY_T key, VALUE_T value)
 {
   return LookupOrUpdateInternal(superblock.info.rootnode, BTREE_OP_UPDATE, key, value);
 }
 
-  
+ 
 ERROR_T BTreeIndex::Delete(const KEY_T &key)
 {
   // This is optional extra credit 
@@ -686,7 +686,7 @@ ERROR_T BTreeIndex::Delete(const KEY_T &key)
   return ERROR_UNIMPL;
 }
 
-  
+ 
 //
 //
 // DEPTH first traversal
