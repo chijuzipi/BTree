@@ -107,13 +107,13 @@ public:
   // return ERROR_SIZE if the key or value are the wrong size for this index
   // return ERROR_CONFLICT if the key already exists and it's a unique index
   ERROR_T Insert(const KEY_T &key, const VALUE_T &value);
-  ERROR_T LookupInsertion(list<SIZE_T> &clues, const SIZE_T &node, const KEY_T &key)
-  ERROR_T InsertNode(BTreeNode &b, KEY_T &element, const VALUE_T &value, bool &pop, SIZE_T &ptr)
+  ERROR_T LookupInsertion(list<SIZE_T> &clues, const SIZE_T &node, const KEY_T &key);
+  ERROR_T InsertNode(BTreeNode &b, KEY_T &element, const VALUE_T &value, bool &pop, SIZE_T &ptr);
   
   // return zero on success
   // return ERROR_NONEXISTENT  if the key doesn't exist
   // return ERROR_SIZE if the key or value are the wrong size for this index
-  ERROR_T Update(const KEY_T &key, const VALUE_T &value);
+  ERROR_T Update(const KEY_T &key, VALUE_T &value);
   
   // return zero on success
   // return ERROR_NONEXISTENT  if the key doesn't exist
@@ -128,7 +128,7 @@ public:
   // Is it a tree?  Is it in order?  Is it balanced?  Does each node have
   // a valid use ratio?
   ERROR_T SanityCheck() const;
-  ERROR_T Check(set<SIZE_T> &Checked, set<KEY_T> &leafkeys, const SIZE_T &node) const;
+  ERROR_T Check(set<SIZE_T> &Checked, list<KEY_T> &leafkeys, const SIZE_T &node) const;
 
   // Display tree
   // BTREE_DEPTH means to do a depth first traversal of 

@@ -239,7 +239,9 @@ ERROR_T BTreeIndex::LookupOrUpdateInternal(const SIZE_T &node,
 	  return b.GetVal(offset,value);
 	} else { 
 	  // BTREE_OP_UPDATE
-	  // WRITE ME
+	  // Write Me
+	  rc = b.SetVal(offset,value);
+	  if (rc) {return rc;}
 	  return ERROR_UNIMPL;
 	}
       }
@@ -368,7 +370,7 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
 		//first look up which leaf should insert to, and record clues
 		rc = LookupInsertion(clues, superblock.info.rootnode, instkey);
 		
-		if(rc != ERROR_NONERROR) {return rc;}
+		if(rc != ERROR_NOERROR) {return rc;}
 		while (!clues.empty() && pop == true){
 			rc= b.Unserialize(buffercache,clues.front());
 			clues.pop_front(); // remove this node
@@ -376,8 +378,8 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
 			
 			InsertNode(b, instkey, value, pop, ptr); //only call InsertNode once
 			
-			rc = b.serialize(buffercache, clues.front());
-			if (rc != ERROR_NONERROR) {return rc;}
+			rc = b.Serialize(buffercache, clues.front());
+			if (rc != ERROR_NOERROR) {return rc;}
 
 		}
 }
@@ -441,7 +443,7 @@ ERROR_T BTreeIndex::InsertNode(BTreeNode &b, KEY_T &key, const VALUE_T &value, b
 	if (b.info.numkeys==0) {
 		switch(b.info.nodetype) {
 		
-		case BTREE_ROOT_NODE:
+		case BTREE_ROOT_NODE: {
 		
         //make two new leaf node to store the value, left and right 
 		SIZE_T left_block; // 
@@ -503,18 +505,23 @@ ERROR_T BTreeIndex::InsertNode(BTreeNode &b, KEY_T &key, const VALUE_T &value, b
 		pop = false;
         return ERROR_NOERROR;
 		break;
+		}
 		
-		case BTREE_INTERIOR_NODE:
+		case BTREE_INTERIOR_NODE: {
 		//since no interior is allowed to be empty
 		return ERROR_INSANE;
+		break;
+		}
 		
-		case BTREE_LEAF_NODE:
+		case BTREE_LEAF_NODE:{
 		rc = b.SetKey(0, key);
 		if (rc) {return rc;}
-		rc = right_node.SetVal(0,value);
+		rc = b.SetVal(0,value);
 		if (rc) {return rc;}
-		return ERROR_NOERROR
+		return ERROR_NOERROR;
 		break;
+		}
+		
 		default:
 		//no other type of node is allowed for the tree
 		return ERROR_INSANE;
@@ -534,11 +541,11 @@ ERROR_T BTreeIndex::InsertNode(BTreeNode &b, KEY_T &key, const VALUE_T &value, b
 			// Otherwise, break loop
 			if (key<testkey) { break; }
 		}
-		for (int i=b.info.numkeys-2; i>=offset; i--) {
+		for (unsigned int i=b.info.numkeys-2; i>=offset; i--) {
 
 			switch(b.info.nodetype) {
 			case BTREE_ROOT_NODE:
-			case BTREE_INTERIOR_NODE:
+			case BTREE_INTERIOR_NODE: {
 			// Shift key
 			rc = b.GetKey(i,temp_key);
 			if (rc) { return rc; }
@@ -550,14 +557,16 @@ ERROR_T BTreeIndex::InsertNode(BTreeNode &b, KEY_T &key, const VALUE_T &value, b
 			rc = b.SetPtr(i+2,temp_ptr);
 			if (rc) { return rc; }
 			break;
+			}
 			//shift lef
-			case BTREE_LEAF_NODE:
+			case BTREE_LEAF_NODE: {
 			rc = b.GetKeyVal(i, temp_pair);
 			if (rc) { return rc; }
 			rc = b.SetKeyVal(i+1, temp_pair);
 			break;
+			}
 			default:
-			return ERROR_INSANE
+			return ERROR_INSANE;
 			}
 		}
 		
@@ -586,41 +595,39 @@ ERROR_T BTreeIndex::InsertNode(BTreeNode &b, KEY_T &key, const VALUE_T &value, b
 	
 	//when the node is full, need to split and pop
 	///
-	if(b.info.numkeys = b.info.GetNumSlotsAsInterior()) {
+	// if(b.info.numkeys = b.info.GetNumSlotsAsInterior()) {
 		
-		switch(b.info.nodetype) {
-		case BTREE_ROOT_NODE:
-		*p = new char [b.info.GetNumDataBytes()+sizeof(SIZE_T)+sizeof(KEY_T)];
+		// switch(b.info.nodetype) {
+		// case BTREE_ROOT_NODE:
+		// *p = new char [b.info.GetNumDataBytes()+sizeof(SIZE_T)+sizeof(KEY_T)];
 		
-		SIZE_T new_block;
-		rc = AllocateNode(new_block);
-        if (rc) {return rc;}
-		BTreeNode new_node; // the split get a new node
-		rc = new_node.Unserialize(buffercache,new_block);
-		if (rc) {return rc;}
-		for(offset = 0; offset<b.info.numkeys;offset++){
-			
+		// SIZE_T new_block;
+		// rc = AllocateNode(new_block);
+        // if (rc) {return rc;}
+		// BTreeNode new_node; // the split get a new node
+		// rc = new_node.Unserialize(buffercache,new_block);
+		// if (rc) {return rc;}
+		// for(offset = 0; offset<b.info.numkeys;offset++){
+			// allocate();
+			// allocate();
+			// pop = false;
+		// }
 		
-		allocate();
-		allocate();
-		pop = false;
-		
-		break;
-		case BTREE_INTERIOR_NODE:
-		break;
-		case BTREE_LEAF_NODE:
-		break;
-		default:
-		return ERROR_INSANE
-		}
-	}	
+		// break;
+		// case BTREE_INTERIOR_NODE:
+		// break;
+		// case BTREE_LEAF_NODE:
+		// break;
+		// default:
+		// return ERROR_INSANE
+		// }
+	// }	
 }
 
   
-ERROR_T BTreeIndex::Update(const KEY_T &key, const VALUE_T &value)
+ERROR_T BTreeIndex::Update(const KEY_T &key, VALUE_T &value)
 {
-  // WRITE ME
-  return ERROR_UNIMPL;
+  return LookupOrUpdateInternal(superblock.info.rootnode, BTREE_OP_UPDATE, key, value);
 }
 
   
@@ -716,20 +723,22 @@ ERROR_T BTreeIndex::SanityCheck() const
 {
 	
 	set<SIZE_T> checked;
-	set<KEY_T> leafkeys;
+	list<KEY_T> leafkeys;
 	ERROR_T rc;
 	rc = Check(checked, leafkeys, superblock.info.rootnode);
 	return rc;
 
 }  
 
-ERROR_T BTreeIndex::Check(set<SIZE_T> &Checked, set<KEY_T> &leafkeys, const SIZE_T &node) const
+ERROR_T BTreeIndex::Check(set<SIZE_T> &checked, list<KEY_T> &leafkeys, const SIZE_T &node) const
 {
 	BTreeNode b;
 	ERROR_T rc;
 	SIZE_T ptr;
 	SIZE_T offset;
 	KEY_T testkey;
+	KEY_T testkey1;
+	KEY_T testkey2;
 
 	//
 	//Check here to see if node has already been checked (by scanning the list)
@@ -749,20 +758,24 @@ ERROR_T BTreeIndex::Check(set<SIZE_T> &Checked, set<KEY_T> &leafkeys, const SIZE
 	case BTREE_INTERIOR_NODE:
 
 	if (b.info.numkeys >= b.info.GetNumSlotsAsInterior()) {
-	  return ERROR_TOOMANYELEMENTS;
+	  return ERROR_NODEOVERFLOW;
 	}
 
 	for(offset=0; offset<=b.info.numkeys; offset++){
 	  rc = b.GetPtr(offset, ptr);
 	  if(rc) {return rc;}
-	  rc = Check(Checked, ptr);
+	  rc = Check(checked, leafkeys, ptr);
 	  if (rc) { return rc; }
 	}
-	//using iterator to test if it is sorted
-	for(std::set<KEY_T>::iterator it=leafkeys.begin(); it!=leafkeys.end(); ++it)
+	//test if leafkeys is sorted
+	for(unsigned int i=0; i < leafkeys.size(); i++)
 	{
-		if(*it > *(it++))
-		{return ERROR_BADORDER;}
+		testkey1 = leafkeys.front();
+		leafkeys.pop_front();
+		testkey2 = leafkeys.front();
+		leafkeys.pop_front();
+		if (testkey1.data > testkey2.data)
+		return ERROR_BADORDER;
 	}
 	return ERROR_NOERROR;
 	
@@ -770,13 +783,13 @@ ERROR_T BTreeIndex::Check(set<SIZE_T> &Checked, set<KEY_T> &leafkeys, const SIZE
 
 	case BTREE_LEAF_NODE:
 	if (b.info.numkeys >= b.info.GetNumSlotsAsLeaf()) {
-	  return ERROR_TOOMANYELEMENTS;
+	  return ERROR_NODEOVERFLOW;
 	}
 	
-	for(offset=0; offset<=b.info.numkeys; offset++){
+	for(offset=0; offset<b.info.numkeys; offset++){
 		rc = b.GetKey(offset,testkey);
 		if(rc) {return rc;}
-		leafkeys.insert(testkey);
+		leafkeys.push_back(testkey);
 	}
 	return ERROR_NOERROR;
 	break;
@@ -790,7 +803,7 @@ ERROR_T BTreeIndex::Check(set<SIZE_T> &Checked, set<KEY_T> &leafkeys, const SIZE
 
 ostream & BTreeIndex::Print(ostream &os) const
 {
-  // WRITE ME
+  Display(os, BTREE_DEPTH_DOT);
   return os;
 }
 
