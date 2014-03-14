@@ -1,6 +1,3 @@
-#include <assert.h>
-#include "btree.h"
-
 KeyValuePair::KeyValuePair()
 {}
 
@@ -384,7 +381,7 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
 		}
 }
 
-ERROR_T BTreeIndex::LookupInsertion(list<SIZE_T> &clues, const SIZE_T &node, const KEY_T &key)					   
+ERROR_T BTreeIndex::LookupInsertion(list<SIZE_T> &clues, const SIZE_T &node, const KEY_T &key)		   
 {
   BTreeNode b;
   ERROR_T rc;
@@ -566,41 +563,6 @@ ERROR_T BTreeIndex::InsertNode(BTreeNode &b, KEY_T &key, const VALUE_T &value, b
 				pop = false;
 
 				return ERROR_NOERROR;
-		}
-
-		if (b.info.numkeys == b.info.GetNumSlotsAsInterior()){
-
-			//find middle value (mid_value) of the keys in the block + the new key and split
-
-			//allocate a new block for the new leaf
-			SIZE_T new_block;
-		rc = AllocateNode(new_block);
-		if (rc) {return rc;}
-		BTreeNode new_node; // the split get a new node
-
-		rc = new_node.Unserialize(buffercache,new_block);	//put the new block into buffer
-		if (rc) { return rc; }
-
-		new_node.info.nodetype = BTREE_LEAF_NODE;
-		new_node.data = new char [new_node.info.GetNumDataBytes()];
-
-
-		//split into two nodes here
-
-
-
-			//put the two nodes back into memory
-		//new node:
-		rc = new_node.Serialize(buffercache,new_block);
-		if (rc) { return rc; }
-		//old node:
-		rc = b.Serialize(buffercache,ptr);
-		if (rc) { return rc; }
-		
-		//pointer = number of new node SET THIS BEFORE RETURN
-		//don't forget to set key to pass here
-		ptr = new_block;
-			pop = true;
 		}
 	}
 		
@@ -888,7 +850,3 @@ ostream & BTreeIndex::Print(ostream &os) const
   Display(os, BTREE_DEPTH_DOT);
   return os;
 }
-
-
-
-
