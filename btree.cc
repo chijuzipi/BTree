@@ -605,8 +605,130 @@ ERROR_T BTreeIndex::InsertRoot(BTreeNode &b, KEY_T &element, const VALUE_T &valu
 }
 
 
-  
-ERROR_T BTreeIndex::Update(const KEY_T &key, const VALUE_T &value)
+
+
+ 
+ERROR_T BTreeIndex::InsertLeaf(const SIZE_T &node, KEY_T &key, const VALUE_T &value, bool &pop, SIZE_T &pointer) 
+{
+	BTreeNode b;
+	ERROR_T rc;
+	SIZE_T offset;
+	KEY_T testkey;
+	SIZE_T ptr;
+
+
+	// if there is room in the leaf, insert it in the right place
+	if (b.info.numkeys>0 && b.info.numkeys<b.info.GetNumSlotsAsInterior()) {
+		for(offset = 0; offset<b.info.numkeys;offset++){
+			// Move through keys until we find one larger than input key
+			rc = b.GetKey(offset,testkey);
+			if (rc) { return rc; }
+			// Once one is found, break loop
+			if (key<testkey) { break; }
+		}
+		for (int i=offset; i<b.info.numkeys; i++) {
+			// Shift key
+			rc = b.GetKey(i,temp_key_ref);
+			if (rc) { return rc; }
+			rc = b.SetKey(i+1,temp_key_ref);
+			if (rc) { return rc; }
+
+			//Shift value
+			rc = b.GetVal(i+1,temp_val_ref);
+			if (rc) { return rc; }
+			rc = b.SetVal(i+2,temp_val_ref);
+			if (rc) { return rc; }
+		}
+		
+			// Set input key
+			rc = b.SetKey(offset,key);
+			if (rc) { return rc; }
+
+			// Set input val
+			rc = b.SetVal(offset+1,value);
+			if (rc) { return rc; }
+			//number of keys increases;
+			b.info.numkeys++;
+
+			// Serialize block
+			rc = b.Serialize(buffercache,node);
+			if (rc) { return rc; }
+			
+			// no need to pop, insert is done
+			pop = false;
+
+			return ERROR_NOERROR;
+	}
+
+	if (b.info.numkeys == b.info.GetNumSlotsAsInterior()){
+
+		//find middle value (mid_value) of the keys in the block + the new key
+		//temp is a temporary array to hold these
+		const keynum = b.info.GetNumSlotsAsInterior()+1;
+		KEY_T temp [keynum];
+		// Move through keys until we find one larger than input key 
+		//and input them into the temp array
+		for(offset = 0; offset<keynum;offset++){
+			rc = b.GetKey(offset,testkey);
+			if (rc) { return rc; }
+			// If key exists, conflict error.
+			if (key == testkey) { return ERROR_CONFLICT; }
+			// If fetched key is less, put it into the temp array
+			if (key>testkey) {
+				temp[offset] = testkey;
+			}
+			// Otherwise, insert the key and break loop
+			if (key<testkey) { 
+				temp[offset] = key;
+				break; }
+		}
+		//Now insert the rest of the node keys into the temp array
+		for (int i=offset+1; i<keynum; i++) {
+			rc = b.GetKey(i-1,testkey);
+			if (rc) { return rc; }
+			temp[i] = testkey;
+		}
+
+		//Now find the offset of the middle value of the temp array
+		mid_value = (keynum/2) + 1;
+
+		//allocate a new block for the new leaf
+		SIZE_T new_block_loc; //block number of the new block
+        SIZE_T& new_block_ref = new_block_loc;
+
+        // Get block offset from AllocateNode
+        rc = AllocateNode(new_block_ref);
+        if (rc) { cout<<rc<<endl; return rc; }
+
+        // Unserialize from block offset into new_node
+        BTreeNode new_node;
+        rc = new_node.Unserialize(buffercache,new_block_loc);	//put the new block into buffer
+        if (rc) { return rc; }
+
+        new_node.info.nodetype = BTREE_LEAF_NODE;
+        new_node.data = new char [new_node.info.GetNumDataBytes()];
+
+
+        //split into two nodes here
+
+        
+
+		//put the two nodes back into memory
+        //new node:
+        rc = new_node.Serialize(buffercache,new_block_loc);
+        if (rc) { return rc; }
+        //old node:
+        rc = b.Serialize(buffercache,node);
+        if (rc) { return rc; }
+        
+        //pointer = number of new node SET THIS BEFORE RETURN
+        //don't forget to set key to pass here
+        pointer = new_block_loc;
+		pop = true;
+	}
+}
+
+
 {
   // WRITE ME
   return ERROR_UNIMPL;
