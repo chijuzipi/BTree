@@ -514,13 +514,95 @@ ERROR_T BTreeIndex::InsertNode(BTreeNode &b, KEY_T &key, const VALUE_T &value, b
 		}
 		
 		case BTREE_LEAF_NODE:{
-		rc = b.SetKey(0, key);
-		if (rc) {return rc;}
-		rc = b.SetVal(0,value);
-		if (rc) {return rc;}
-		return ERROR_NOERROR;
-		break;
+		BTreeNode b;
+		ERROR_T rc;
+		SIZE_T offset;
+		KEY_T testkey;
+		SIZE_T ptr;
+		KEY_T temp_key;
+		VALUE_T temp_val;
+
+
+		// if there is room in the leaf, insert it in the right place
+		if (b.info.numkeys>0 && b.info.numkeys<b.info.GetNumSlotsAsInterior()) {
+			for(offset = 0; offset<b.info.numkeys;offset++){
+				// Move through keys until we find one larger than input key
+				rc = b.GetKey(offset,testkey);
+				if (rc) { return rc; }
+				// If key exists, conflict error.
+		    if (key == testkey) { return ERROR_CONFLICT; }
+				// Once one is found, break loop
+				if (key<testkey) { break; }
+			}
+			for (int i=b.info.numkeys-2; i>=offset; i--) {
+				// Shift key
+				rc = b.GetKey(i,temp_key);
+				if (rc) { return rc; }
+				rc = b.SetKey(i+1,temp_key);
+				if (rc) { return rc; }
+
+				//Shift value
+				rc = b.GetVal(i+1,temp_val);
+				if (rc) { return rc; }
+				rc = b.SetVal(i+2,temp_val);
+				if (rc) { return rc; }
+			}
+			
+				// Set input key
+				rc = b.SetKey(offset,key);
+				if (rc) { return rc; }
+
+				// Set input val
+				rc = b.SetVal(offset+1,value);
+				if (rc) { return rc; }
+				//number of keys increases;
+				b.info.numkeys++;
+
+				// Serialize block
+				rc = b.Serialize(buffercache,ptr);
+				if (rc) { return rc; }
+				
+				// no need to pop, insert is done
+				pop = false;
+
+				return ERROR_NOERROR;
 		}
+
+		if (b.info.numkeys == b.info.GetNumSlotsAsInterior()){
+
+			//find middle value (mid_value) of the keys in the block + the new key and split
+
+			//allocate a new block for the new leaf
+			SIZE_T new_block;
+		rc = AllocateNode(new_block);
+		if (rc) {return rc;}
+		BTreeNode new_node; // the split get a new node
+
+		rc = new_node.Unserialize(buffercache,new_block);	//put the new block into buffer
+		if (rc) { return rc; }
+
+		new_node.info.nodetype = BTREE_LEAF_NODE;
+		new_node.data = new char [new_node.info.GetNumDataBytes()];
+
+
+		//split into two nodes here
+
+
+
+			//put the two nodes back into memory
+		//new node:
+		rc = new_node.Serialize(buffercache,new_block);
+		if (rc) { return rc; }
+		//old node:
+		rc = b.Serialize(buffercache,ptr);
+		if (rc) { return rc; }
+		
+		//pointer = number of new node SET THIS BEFORE RETURN
+		//don't forget to set key to pass here
+		ptr = new_block;
+			pop = true;
+		}
+	}
 		
 		default:
 		//no other type of node is allowed for the tree
