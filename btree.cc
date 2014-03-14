@@ -1,3 +1,6 @@
+#include <assert.h>
+#include "btree.h"
+
 KeyValuePair::KeyValuePair()
 {}
 
