@@ -131,7 +131,7 @@ public:
   // Is it a tree?  Is it in order?  Is it balanced?  Does each node have
   // a valid use ratio?
   ERROR_T SanityCheck() const;
-  ERROR_T Check(set<SIZE_T> &Checked, list<KEY_T> &leafkeys, const SIZE_T &node) const;
+  ERROR_T Check(set<SIZE_T> &Checked, list<KEY_T> &leafkeys, SIZE_T &node) const;
 
   // Display tree
   // BTREE_DEPTH means to do a depth first traversal of 

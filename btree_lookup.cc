@@ -41,6 +41,12 @@ int main(int argc, char **argv)
   } else {
     cerr << "Index attached!"<<endl;
     VALUE_T val;
+    list<VALUE_T> vallist;
+    if ((rc=btree.RangeQuery(KEY_T("aaaaaaaaaaaaaaaa"), KEY_T("llllllllllllllll"), vallist))!=ERROR_NOERROR) { 
+      cerr <<"Lookup failed: error "<<rc<<endl;
+    } else {
+      cerr <<"Lookup succeeded\n";
+    }
     if ((rc=btree.Lookup(KEY_T(key),val))!=ERROR_NOERROR) { 
       cerr <<"Lookup failed: error "<<rc<<endl;
     } else {
